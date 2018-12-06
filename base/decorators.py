@@ -15,11 +15,14 @@ def login_required(view):
 
 
 def permission_required(permissions, raise_exception=True):
-    def decorator(f):
+    def _decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
             if g.user is None:
                 return abort(401)
+
+            if g.user.is_superuser:
+                return
 
             if permissions is None:
                 perms = []
@@ -37,7 +40,7 @@ def permission_required(permissions, raise_exception=True):
 
             return f(*args, **kwargs)
         return wrapper
-    return decorator
+    return _decorator
 
 
 def cached(timeout=5 * 60, key='view/%s'):
