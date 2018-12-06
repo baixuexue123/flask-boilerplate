@@ -11,6 +11,10 @@ class Config:
 
     MAX_CONTENT_LENGTH = 1024 * 1024 * 50
 
+    @staticmethod
+    def init_app(app):
+        pass
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -30,6 +34,33 @@ class DevelopmentConfig(Config):
     CACHE_KEY_PREFIX = 'cache:'
     CACHE_DEFAULT_TIMEOUT = 120
 
+    LOG_DIR = os.path.join(basedir, 'logs')
+
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+        print('THIS APP IS IN DEBUG MODE. YOU SHOULD NOT SEE THIS IN PRODUCTION.')
+
+        # email errors to the administrators
+        import logging
+        from logging.handlers import RotatingFileHandler
+        # Formatter
+        formatter = logging.Formatter(
+            '%(asctime)s %(levelname)s %(process)d %(thread)d '
+            '%(pathname)s %(lineno)s %(message)s')
+
+        # FileHandler Info
+        file_handler = RotatingFileHandler(filename=cls.LOG_DIR)
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+
+        # FileHandler Error
+        file_handler_error = RotatingFileHandler(filename=cls.LOG_DIR)
+        file_handler_error.setFormatter(formatter)
+        file_handler_error.setLevel(logging.ERROR)
+        app.logger.addHandler(file_handler_error)
+
 
 class TestingConfig(Config):
     DEBUG = True
@@ -41,3 +72,8 @@ class ProductionConfig(Config):
     DEBUG = False
     REDIS_URL = 'localhost:6379'
     DATABASE_URI = 'mysql+pymysql://demo:demo123@localhost:3306/demo?charset=utf8'
+
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+        assert os.environ.get('SECRET_KEY'), 'SECRET_KEY IS NOT SET!'
