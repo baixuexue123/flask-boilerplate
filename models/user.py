@@ -1,23 +1,64 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-# from sqlalchemy import Column, Integer, String
-# from app import db
+from sqlalchemy.orm import relationship
+from sqlalchemy import Table, Column, ForeignKey, Integer, String, Boolean, DateTime
 
-engine = create_engine('sqlite:///database.db', echo=True)
-db_session = scoped_session(sessionmaker(autocommit=False,
-                                         autoflush=False,
-                                         bind=engine))
-Base = declarative_base()
-Base.query = db_session.query_property()
+from . import metadata, Base
+
+
+user_groups = Table(
+    'user_groups', metadata,
+    Column('user_id', Integer, ForeignKey('user.id')),
+    Column('group_id', Integer, ForeignKey('group.id'))
+)
+
+
+user_permissions = Table(
+    'user_permissions', metadata,
+    Column('user_id', Integer, ForeignKey('user.id')),
+    Column('permission_id', Integer, ForeignKey('permission.id'))
+)
+
+
+group_permissions = Table(
+    'group_permissions', metadata,
+    Column('group_id', Integer, ForeignKey('group.id')),
+    Column('permission_id', Integer, ForeignKey('permission.id'))
+)
 
 
 class User(Base):
-    __tablename__ = 'Users'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), unique=True)
-    email = db.Column(db.String(120), unique=True)
-    password = db.Column(db.String(30))
-    def __init__(self, name=None, password=None):
-        self.name = name
-        self.password = password
+    __tablename__ = 'user'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(30), unique=True, nullable=False)
+    password = Column(String(128), nullable=False)
+    name = Column(String(20), nullable=False)
+    email = Column(String(50), nullable=True)
+
+    is_active = Column(Boolean, nullable=False, default=True)
+    is_superuser = Column(Boolean, nullable=False, default=False)
+    is_stuff = Column(Boolean, nullable=False, default=False)
+
+    change_ts = Column(DateTime, nullable=False)
+    create_ts = Column(DateTime, nullable=False)
+
+    groups = relationship('Group', secondary=user_groups, back_populates='users')
+    permissions = relationship('Permission', secondary=user_permissions)
+
+
+class Group(Base):
+    __tablename__ = 'group'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(30), unique=True, nullable=False)
+    memo = Column(String(200), nullable=False, default='')
+
+    users = relationship("User", secondary=user_groups, back_populates='groups')
+    permissions = relationship("Permission", secondary=group_permissions)
+
+
+class Permission(Base):
+    __tablename__ = 'permission'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), unique=True, nullable=False)
+    memo = Column(String(200), nullable=False, default='')

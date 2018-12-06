@@ -1,45 +1,39 @@
 import os
-import logging
-from logging import Formatter, FileHandler
 
-from flask import Flask, jsonify, session, request, g
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask import Flask
+from flask.helpers import get_env
+from flask_session import Session
 
-app = Flask(__name__)
-app.config.from_object('config')
+app = Flask('dting')
 
-if not app.debug:
-    file_handler = FileHandler('error.log')
-    file_handler.setFormatter(
-        Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
-    )
-    app.logger.setLevel(logging.INFO)
-    file_handler.setLevel(logging.INFO)
-    app.logger.addHandler(file_handler)
-    app.logger.info('errors')
+if get_env() == 'production':
+    app.config.from_object('config.ProductionConfig')
+else:
+    app.config.from_object('config.DevelopmentConfig')
+
+Session(app)
+
+with app.app_context():
+    from api import auth
+    app.register_blueprint(auth.bp)
+
+    from api import admin
+    app.register_blueprint(admin.bp)
+
+    import errorhandlers
+    from models import db_session
 
 
-@app.teardown_request
+@app.teardown_appcontext
 def shutdown_session(exception=None):
-    # db_session.remove()
-    pass
+    db_session.remove()
 
 
-def login_required(test):
-    @wraps(test)
-    def wrap(*args, **kwargs):
-        if 'logged_in' in session:
-            return test(*args, **kwargs)
-        else:
-            print('You need to login first.')
-    return wrap
-
-
-@app.route('/', methods=['GET'])
+@app.route('/')
 def index():
-    return 'hello'
+    return 'Hello'
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 8888))
     app.run(host='0.0.0.0', port=port)
