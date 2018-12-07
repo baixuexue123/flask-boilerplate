@@ -1,13 +1,21 @@
 import os
-
 import redis
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
+if os.path.exists('config.env'):
+    print('Importing environment from .env file')
+    for line in open('config.env'):
+        var = line.strip().split('=')
+        if len(var) == 2:
+            os.environ[var[0]] = var[1].replace("\"", "")
+
+
 class Config:
-    APP_NAME = 'APP_NAME'
+    APP_NAME = os.environ.get('FLASK_APP') or 'FLASK-APP'
     SECRET_KEY = 'SECRET_KEY_ENV_VAR_NOT_SET'
+    SQLALCHEMY_ECHO = False
 
     MAX_CONTENT_LENGTH = 1024 * 1024 * 50
 
@@ -19,11 +27,12 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
     REDIS_URL = '172.25.61.75:6379'
+    SQLALCHEMY_ECHO = True
     DATABASE_URI = 'mysql+pymysql://demo:demo123@172.25.61.75:3306/demo?charset=utf8'
 
     SESSION_TYPE = 'redis'
-    SESSION_PERMANENT = False  # True: 则关闭浏览器session就失效
-    SESSION_USE_SIGNER = False  # 是否对发送到浏览器上session的cookie值进行加密
+    SESSION_PERMANENT = False   # 关闭浏览器session不失效
+    SESSION_USE_SIGNER = False  # 不对发送到浏览器上session的cookie值进行加密
     SESSION_KEY_PREFIX = 'session:'
     SESSION_REDIS = redis.Redis(host='172.25.61.75', port='6379', db=0)
 
@@ -35,31 +44,38 @@ class DevelopmentConfig(Config):
     CACHE_DEFAULT_TIMEOUT = 120
 
     LOG_DIR = os.path.join(basedir, 'logs')
+    LOG_MAXBYTES = 1024 * 1024 * 100  # 100M -- 单个log文件的大小
+    LOG_BACKUPCOUNT = 8  # log文件备份数量
 
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
-        print('THIS APP IS IN DEBUG MODE. YOU SHOULD NOT SEE THIS IN PRODUCTION.')
 
-        # email errors to the administrators
         import logging
         from logging.handlers import RotatingFileHandler
-        # Formatter
-        formatter = logging.Formatter(
-            '%(asctime)s %(levelname)s %(process)d %(thread)d '
-            '%(pathname)s %(lineno)s %(message)s')
 
-        # FileHandler Info
-        file_handler = RotatingFileHandler(filename=cls.LOG_DIR)
-        file_handler.setFormatter(formatter)
+        verbose = logging.Formatter(
+            fmt='[%(asctime)s - %(name)s - %(module)s - %(lineno)d] %(levelname)-8s\n%(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+
+        simple = logging.Formatter(
+            fmt='[%(asctime)s - %(name)s] %(levelname)-8s : %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+
+        log_file = '%s.log' % cls.APP_NAME
+        file_handler = RotatingFileHandler(log_file, maxBytes=cls.LOG_MAXBYTES, backupCount=cls.LOG_BACKUPCOUNT)
         file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
+        file_handler.setFormatter(simple)
 
-        # FileHandler Error
-        file_handler_error = RotatingFileHandler(filename=cls.LOG_DIR)
-        file_handler_error.setFormatter(formatter)
-        file_handler_error.setLevel(logging.ERROR)
-        app.logger.addHandler(file_handler_error)
+        err_file = '%s.error.log' % cls.APP_NAME
+        error_handler = logging.FileHandler(err_file, mode='w')
+        error_handler.setLevel(logging.ERROR)
+        error_handler.setFormatter(verbose)
+
+        app.logger.addHandler(file_handler)
+        app.logger.addHandler(error_handler)
 
 
 class TestingConfig(Config):
@@ -76,4 +92,11 @@ class ProductionConfig(Config):
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
-        assert os.environ.get('SECRET_KEY'), 'SECRET_KEY IS NOT SET!'
+
+
+config = {
+    'development': DevelopmentConfig,
+    'testing': TestingConfig,
+    'production': ProductionConfig,
+    'default': DevelopmentConfig,
+}
