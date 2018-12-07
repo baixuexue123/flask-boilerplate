@@ -1,14 +1,17 @@
+import os
+
 from flask import Flask
 from flask_session import Session
 
 from config import config
 
 
-def create_app(config_name):
+def create_app():
     app = Flask(__name__)
 
-    app.config.from_object(config[config_name])
-    config[config_name].init_app(app)
+    env = os.environ.get('FLASK_ENV') or 'development'
+    app.config.from_object(config[env])
+    config[env].init_app(app)
 
     Session(app)
 
