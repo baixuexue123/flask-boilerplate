@@ -18,9 +18,9 @@ CREATE TABLE `user` (
 
 
 CREATE TABLE `group` (
-  `id`       INT           NOT NULL AUTO_INCREMENT,
-  `name`     VARCHAR(30)   NOT NULL,
-  `memo`     VARCHAR(200)  NOT NULL DEFAULT '',
+  `id`         INT           NOT NULL AUTO_INCREMENT,
+  `name`       VARCHAR(30)   NOT NULL,
+  `memo`       VARCHAR(200)  NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY (`name`)
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8 COMMENT='组';

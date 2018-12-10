@@ -13,11 +13,14 @@ if os.path.exists('config.env'):
 
 
 class Config:
+    DEBUG = True
     APP_NAME = os.environ.get('FLASK_APP') or 'FLASK-APP'
     SECRET_KEY = 'SECRET_KEY_ENV_VAR_NOT_SET'
+
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True
 
-    MAX_CONTENT_LENGTH = 1024 * 1024 * 50
+    MAX_CONTENT_LENGTH = 1024 * 1024 * 100
 
     @staticmethod
     def init_app(app):
@@ -25,9 +28,9 @@ class Config:
 
 
 class DevelopmentConfig(Config):
-    DEBUG = True
     REDIS_URL = '172.25.61.75:6379'
-    DATABASE_URI = 'mysql+pymysql://demo:demo123@172.25.61.75:3306/demo?charset=utf8'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://demo:demo123@172.25.61.75:3306/demo?charset=utf8'
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
 
     SESSION_TYPE = 'redis'
     SESSION_PERMANENT = False   # 关闭浏览器session不失效
@@ -48,20 +51,19 @@ class DevelopmentConfig(Config):
 
 
 class TestingConfig(Config):
-    DEBUG = True
     REDIS_URL = 'localhost:6379'
-    DATABASE_URI = 'mysql+pymysql://demo:demo123@localhost:3306/demo?charset=utf8'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://demo:demo123@localhost:3306/demo?charset=utf8'
 
 
 class ProductionConfig(Config):
     DEBUG = False
     REDIS_URL = 'localhost:6379'
-    DATABASE_URI = 'mysql+pymysql://demo:demo123@localhost:3306/demo?charset=utf8'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://demo:demo123@localhost:3306/demo?charset=utf8'
     SQLALCHEMY_ECHO = False
 
     SESSION_TYPE = 'redis'
-    SESSION_PERMANENT = False   # 关闭浏览器session不失效
-    SESSION_USE_SIGNER = False  # 不对发送到浏览器上session的cookie值进行加密
+    SESSION_PERMANENT = False
+    SESSION_USE_SIGNER = False
     SESSION_KEY_PREFIX = 'session:'
     SESSION_REDIS = redis.Redis(host='172.25.61.75', port='6379', db=0)
 
@@ -115,8 +117,8 @@ class ProductionConfig(Config):
 
 
 config = {
+    'default': DevelopmentConfig,
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
-    'default': DevelopmentConfig,
 }

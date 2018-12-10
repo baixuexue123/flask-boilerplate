@@ -28,14 +28,23 @@ def login():
     if user is None:
         app.logger.info('用户:%s 不存在' % username)
         return fail(msg='Incorrect username or password')
-    elif not checkpw(user.password, password):
+    if not user.is_active:
+        app.logger.info('用户:%s 未激活' % username)
+        return fail(msg='Incorrect username or password')
+    if not checkpw(user.password, password):
         app.logger.info('用户:%s 密码不正确' % username)
         return fail(msg='Incorrect username or password')
 
     session.clear()
     session['user_id'] = user.id
-    app.logger.info('用户:%s(%s) - 登录' % (user.name, user.username))
+    app.logger.info('用户:%s(%s) - 登录成功' % (user.name, user.username))
     return success()
+
+
+@bp.route('/check/auth', methods=['GET'])
+@login_required
+def check_auth():
+    return success(profile=g.user.as_dict(verbose=True))
 
 
 @bp.route('/logout', methods=['GET'])
