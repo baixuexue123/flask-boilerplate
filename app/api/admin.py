@@ -1,6 +1,4 @@
-from flask import request, g
-from flask import Blueprint
-from flask import current_app as app
+from flask import Blueprint, request
 
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
@@ -8,29 +6,75 @@ from sqlalchemy.exc import IntegrityError
 from app import db
 from app.models.user import User, Group, Permission
 from app.decorators import admin_required
-from app.utils.crypt import checkpw, hashpw, get_random_string
+from app.utils.crypt import hashpw, get_random_string
 
 from . import APIView, success, fail
 
 bp = Blueprint('admin', __name__, url_prefix='/api/admin')
 
 
-@bp.route('/reset/pwd', methods=['POST'])
+@bp.route('/user/<int:user_id>/pwd', methods=['POST'])
 @admin_required
-def reset_pwd():
-    old_password = request.json['old_password']
-    new_password1 = request.json['new_password1']
-    new_password2 = request.json['new_password2']
-    if new_password1 != new_password2:
-        return fail(msg='两次输入密码不一致')
+def reset_pwd(user_id):
+    user = User.query.get(user_id)
+    if user is None:
+        return fail(msg='User: %s does not exists' % user_id)
 
-    user = g.user
-    if not checkpw(user.password, old_password):
-        app.logger.info('用户:%s 修改密码, 旧密码不正确' % user.username)
-        return fail(msg='Incorrect password')
+    new_password = request.json['new_password']
+    if len(new_password) < 6:
+        return fail(msg='Minimum password length of 6 characters')
 
-    User.query.filter(User.id == user.id).\
-        update({'password': hashpw(new_password1)})
+    user.password = hashpw(new_password)
+    db.session.commit()
+    return success()
+
+
+# 设置用户的组
+@bp.route('/user/<int:user_id>/groups', methods=['POST'])
+@admin_required
+def user_groups(user_id):
+    group_ids = request.json['group_ids']
+
+    user = User.query.get(user_id)
+    if user is None:
+        return fail(msg='User: %s does not exists' % user_id)
+
+    groups = Group.query.filter(Group.id.in_(group_ids))
+    for g in groups:
+        user.groups.append(g)
+    db.session.commit()
+    return success()
+
+
+@bp.route('/user/<int:user_id>/permissions', methods=['POST'])
+@admin_required
+def user_permissions(user_id):
+    perm_ids = request.json['perm_ids']
+
+    user = User.query.get(user_id)
+    if user is None:
+        return fail(msg='User: %s does not exists' % user_id)
+
+    perms = Permission.query.filter(Permission.id.in_(perm_ids)).all()
+    for p in perms:
+        user.permissions.append(p)
+    db.session.commit()
+    return success()
+
+
+@bp.route('/group/<int:group_id>/permissions', methods=['POST'])
+@admin_required
+def group_permissions(group_id):
+    perm_ids = request.json['perm_ids']
+
+    group = Group.query.get(group_id)
+    if group is None:
+        return fail(msg='Group: %s does not exists' % group_id)
+
+    perms = Permission.query.filter(Permission.id.in_(perm_ids)).all()
+    for p in perms:
+        group.permissions.append(p)
+    db.session.commit()
     return success()
 
 
@@ -166,7 +210,7 @@ class PermissionAPI(AdminAPI):
 
     def post(self):
         name = request.json['name']
-        memo = request.json['memo']
+        memo = request.json.get('memo', '')
         perm = Permission(name=name, memo=memo)
         db.session.add(perm)
         try:
@@ -209,6 +253,13 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
     bp.add_url_rule('%s<%s:%s>' % (url, pk_type, pk), view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
 
-register_api(UserAPI, 'users', '/users/')
-register_api(GroupAPI, 'groups', '/groups/')
-register_api(PermissionAPI, 'permissions', '/permissions/')
+register_api(UserAPI, 'users', '/users/', pk='user_id')
+register_api(GroupAPI, 'groups', '/groups/', pk='group_id')
+
+bp.add_url_rule('/permissions',
+                view_func=PermissionAPI.as_view('permissions'),
+                methods=['GET', 'POST'])
+
+bp.add_url_rule('/permissions/<int:perm_id>',
+                view_func=PermissionAPI.as_view('permissions'),
+                methods=['PUT', 'DELETE'])

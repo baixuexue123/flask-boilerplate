@@ -5,6 +5,7 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 
 from config import config
+
 from .models.base import BaseModel
 
 db = SQLAlchemy(model_class=BaseModel)

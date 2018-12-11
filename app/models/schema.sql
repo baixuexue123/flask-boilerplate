@@ -32,7 +32,8 @@ CREATE TABLE `user_groups` (
   `group_id`      INT    NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`user_id`)       REFERENCES `user` (`id`)     ON DELETE CASCADE,
-  FOREIGN KEY (`group_id`)      REFERENCES `group` (`id`)    ON DELETE CASCADE
+  FOREIGN KEY (`group_id`)      REFERENCES `group` (`id`)    ON DELETE CASCADE,
+  UNIQUE KEY (`user_id`, `group_id`)
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8 COMMENT='用户与组的关系';
 
 
@@ -51,7 +52,8 @@ CREATE TABLE `user_permissions` (
   `permission_id` INT    NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`user_id`)       REFERENCES `user` (`id`)       ON DELETE CASCADE,
-  FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`) ON DELETE CASCADE
+  FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`) ON DELETE CASCADE,
+  UNIQUE KEY (`user_id`, `permission_id`)
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8 COMMENT='用户权限';
 
 
@@ -61,5 +63,6 @@ CREATE TABLE `group_permissions` (
   `permission_id` INT    NOT NULL,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`group_id`)      REFERENCES `group` (`id`)      ON DELETE CASCADE,
-  FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`) ON DELETE CASCADE
+  FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`) ON DELETE CASCADE,
+  UNIQUE KEY (`group_id`, `permission_id`)
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8 COMMENT='组权限';

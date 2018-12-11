@@ -38,17 +38,18 @@ def login():
     session.clear()
     session['user_id'] = user.id
     app.logger.info('用户:%s(%s) - 登录成功' % (user.name, user.username))
-    return success()
+    return success(profile=user.as_dict(verbose=True))
 
 
 @bp.route('/check/auth', methods=['GET'])
 @login_required
 def check_auth():
-    return success(profile=g.user.as_dict(verbose=True))
+    return success()
 
 
 @bp.route('/logout', methods=['GET'])
 @login_required
 def logout():
+    app.logger.info('用户:%s(%s) - 退出' % (g.user.name, g.user.username))
     session.clear()
     return success()
