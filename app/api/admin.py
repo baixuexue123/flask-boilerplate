@@ -256,10 +256,7 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
 register_api(UserAPI, 'users', '/users/', pk='user_id')
 register_api(GroupAPI, 'groups', '/groups/', pk='group_id')
 
-bp.add_url_rule('/permissions',
-                view_func=PermissionAPI.as_view('permissions'),
-                methods=['GET', 'POST'])
 
-bp.add_url_rule('/permissions/<int:perm_id>',
-                view_func=PermissionAPI.as_view('permissions'),
-                methods=['PUT', 'DELETE'])
+permissions_api = PermissionAPI.as_view('permissions')
+bp.add_url_rule('/permissions', view_func=permissions_api, methods=['GET', 'POST'])
+bp.add_url_rule('/permissions/<int:perm_id>', view_func=permissions_api, methods=['PUT', 'DELETE'])

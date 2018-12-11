@@ -1,22 +1,23 @@
+from sqlalchemy.sql import union
+
 from app import db
 
-
 user_groups = db.Table(
-    'user_groups',
+    'user_groups', db.metadata,
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('group_id', db.Integer, db.ForeignKey('group.id'))
 )
 
 
 user_permissions = db.Table(
-    'user_permissions',
+    'user_permissions', db.metadata,
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('permission_id', db.Integer, db.ForeignKey('permission.id'))
 )
 
 
 group_permissions = db.Table(
-    'group_permissions',
+    'group_permissions', db.metadata,
     db.Column('group_id', db.Integer, db.ForeignKey('group.id')),
     db.Column('permission_id', db.Integer, db.ForeignKey('permission.id'))
 )
@@ -53,11 +54,20 @@ class User(db.Model):
         return [{'id': g.id, 'name': g.name} for g in self.groups]
 
     def get_permissions(self):
+        # 用dict去重
         permissions = {p.id: {'id': p.id, 'name': p.name} for p in self.permissions}
         for group in self.groups:
-            for perm in group.permissions:
-                permissions[perm.id] = {'id': perm.id, 'name': perm.name}
-        return permissions
+            for p in group.permissions:
+                permissions[p.id] = {'id': p.id, 'name': p.name}
+        return list(permissions.values())
+
+    def has_perm(self, perm):
+        permissions = []
+        if isinstance(perm, str):
+            permissions = [perm]
+        elif isinstance(perm, (list, tuple)):
+            permissions = perm
+        return
 
 
 class Group(db.Model):
