@@ -1,5 +1,6 @@
 from sqlalchemy import or_, text, union
 from sqlalchemy.orm import relationship, joinedload
+from sqlalchemy.orm.scoping import scoped_session
 
 from app import create_app
 
@@ -27,6 +28,8 @@ with app.app_context():
         WHERE ug.user_id=:user_id
     """, {'user_id': 1})
 
+    print(perms)
+
     # insert
     # group = Group(name='group4', memo='分组四')
     # db.session.add(group)
@@ -44,7 +47,7 @@ with app.app_context():
     # query.filter(or_(User.username == '111', User.name == '111')).filter(User.is_active == 1).all()
 
     # join
-    db.session.query(Permission).join(User).filter(User.id == 1).all()
+    # db.session.query(Permission).join(User).filter(User.id == 1).all()
 
     # update
     # Group.query.filter(Group.id == 2).update({'name': 'group2'})

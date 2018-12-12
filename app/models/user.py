@@ -1,4 +1,4 @@
-from sqlalchemy.sql import union
+from werkzeug.utils import cached_property
 
 from app import db
 
@@ -61,13 +61,28 @@ class User(db.Model):
                 permissions[p.id] = {'id': p.id, 'name': p.name}
         return list(permissions.values())
 
-    def has_perm(self, perm):
-        permissions = []
-        if isinstance(perm, str):
-            permissions = [perm]
-        elif isinstance(perm, (list, tuple)):
-            permissions = perm
-        return
+    @cached_property
+    def all_permissions(self):
+        perms = db.session.execute("""
+            SELECT
+                p1.name
+            FROM permission p1
+                JOIN user_permissions up ON p1.id = up.permission_id
+            WHERE up.user_id=:user_id
+
+            UNION
+
+            SELECT DISTINCT
+                p2.name
+            FROM permission p2
+                JOIN group_permissions gp ON gp.permission_id = p2.id
+                JOIN user_groups ug ON gp.group_id = ug.group_id
+            WHERE ug.user_id=:user_id
+        """, {'user_id': self.id})
+        return {p.name for p in perms}
+
+    def has_perm(self, perms):
+        return set(perms) < self.all_permissions
 
 
 class Group(db.Model):
