@@ -81,7 +81,7 @@ class User(db.Model):
         """, {'user_id': self.id})
         return {p.name for p in perms}
 
-    def has_perm(self, perms):
+    def has_perms(self, perms):
         return set(perms) < self.all_permissions
 
 

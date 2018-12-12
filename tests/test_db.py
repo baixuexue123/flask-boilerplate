@@ -11,25 +11,6 @@ with app.app_context():
     from app.models.user import Group, User, Permission, user_permissions, user_groups, group_permissions
     from app.utils.crypt import get_random_string, hashpw
 
-    perms = db.session.execute("""
-        SELECT
-            p1.id, p1.name
-        FROM permission p1
-            JOIN user_permissions up ON p1.id = up.permission_id
-        WHERE up.user_id=:user_id
-
-        UNION
-
-        SELECT DISTINCT
-            p2.id, p2.name
-        FROM permission p2
-            JOIN group_permissions gp ON gp.permission_id = p2.id
-            JOIN user_groups ug ON gp.group_id = ug.group_id
-        WHERE ug.user_id=:user_id
-    """, {'user_id': 1})
-
-    print(perms)
-
     # insert
     # group = Group(name='group4', memo='分组四')
     # db.session.add(group)
