@@ -18,6 +18,13 @@ with app.app_context():
     # print(group.id)
     # db.session.commit()
 
+    user = User(
+        username='admin', password='123', name='管理员',
+        email='xxx@jd.com'
+    )
+    db.session.add(user)
+    db.session.commit()
+
     # get
     # print(Group.query.get(10))
 
