@@ -72,7 +72,7 @@ class User(db.Model):
 
             UNION
 
-            SELECT DISTINCT
+            SELECT
                 p2.name
             FROM permission p2
                 JOIN group_permissions gp ON gp.permission_id = p2.id

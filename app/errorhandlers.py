@@ -1,24 +1,28 @@
-from flask import Blueprint
-from flask import jsonify
+from flask import Blueprint, jsonify
 
 bp = Blueprint('errors', __name__)
 
 
+@bp.errorhandler(400)
+def page_not_found(error):
+    return jsonify(code=100400, msg='Bad Request')
+
+
 @bp.errorhandler(401)
 def page_not_found(error):
-    return jsonify(code=401, msg='Unauthorized')
+    return jsonify(code=100401, msg='Unauthorized')
 
 
 @bp.errorhandler(403)
 def page_not_found(error):
-    return jsonify(code=403, msg='Forbidden')
+    return jsonify(code=100403, msg='Forbidden')
 
 
 @bp.errorhandler(404)
 def page_not_found(error):
-    return jsonify(code=404, msg='Page not found')
+    return jsonify(code=100404, msg='Page Not Found')
 
 
 @bp.errorhandler(500)
 def page_not_found(error):
-    return jsonify(code=500, msg='Server Error')
+    return jsonify(code=100500, msg='Server Error')

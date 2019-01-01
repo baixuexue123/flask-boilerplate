@@ -1,4 +1,6 @@
 import os
+from datetime import timedelta
+
 import redis
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -17,6 +19,9 @@ class Config:
     APP_NAME = os.environ.get('FLASK_APP') or 'FLASK-APP'
     SECRET_KEY = 'SECRET_KEY_ENV_VAR_NOT_SET'
 
+    SESSION_COOKIE_HTTPONLY = False
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True
 
@@ -28,17 +33,17 @@ class Config:
 
 
 class DevelopmentConfig(Config):
-    REDIS_URL = '172.25.61.75:6379'
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://demo:demo123@172.25.61.75:3306/demo?charset=utf8'
+    REDIS_URL = 'localhost:6379'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://demo:demo123@localhost:3306/demo?charset=utf8'
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
     SESSION_TYPE = 'redis'
     SESSION_PERMANENT = False   # 关闭浏览器session不失效
     SESSION_USE_SIGNER = False  # 不对发送到浏览器上session的cookie值进行加密
     SESSION_KEY_PREFIX = 'session:'
-    SESSION_REDIS = redis.Redis(host='172.25.61.75', port='6379', db=0)
+    SESSION_REDIS = redis.Redis(host='127.0.0.1', port='6379', db=0)
 
-    CACHE_HOST = '172.25.61.75'
+    CACHE_HOST = '127.0.0.1'
     CACHE_PORT = 6379
     CACHE_DB = 1
     CACHE_PASSWORD = None
@@ -65,9 +70,9 @@ class ProductionConfig(Config):
     SESSION_PERMANENT = False
     SESSION_USE_SIGNER = False
     SESSION_KEY_PREFIX = 'session:'
-    SESSION_REDIS = redis.Redis(host='172.25.61.75', port='6379', db=0)
+    SESSION_REDIS = redis.Redis(host='localhost', port='6379', db=0)
 
-    CACHE_HOST = '172.25.61.75'
+    CACHE_HOST = 'localhost'
     CACHE_PORT = 6379
     CACHE_DB = 1
     CACHE_PASSWORD = None

@@ -24,32 +24,39 @@ def load_logged_in_user():
 def login():
     username = request.json['username']
     password = request.json['password']
-    user = User.query.filter(User.name == username).first()
+    user = User.query.filter(User.username == username).first()
+
     if user is None:
         app.logger.info('用户:%s 不存在' % username)
         return fail(msg='Incorrect username or password')
     if not user.is_active:
         app.logger.info('用户:%s 未激活' % username)
         return fail(msg='Incorrect username or password')
-    if not checkpw(user.password, password):
+    if not checkpw(password, user.password):
         app.logger.info('用户:%s 密码不正确' % username)
         return fail(msg='Incorrect username or password')
 
     session.clear()
     session['user_id'] = user.id
-    app.logger.info('用户:%s(%s) - 登录成功' % (user.name, user.username))
-    return success(profile=user.as_dict(verbose=True))
+    app.logger.info('用户:%s(%s) - 登录成功' % (user.username, user.name))
+    return success(user_id=user.id)
 
 
-@bp.route('/check/auth', methods=['GET'])
+@bp.route('/user_info', methods=['GET'])
+@login_required
+def get_user_info():
+    return success(user=g.user.as_dict(verbose=True))
+
+
+@bp.route('/check', methods=['GET'])
 @login_required
 def check_auth():
-    return success()
+    return success(user=g.user.as_dict(verbose=True))
 
 
 @bp.route('/logout', methods=['GET'])
 @login_required
 def logout():
-    app.logger.info('用户:%s(%s) - 退出' % (g.user.name, g.user.username))
+    app.logger.info('用户:%s(%s) - 退出' % (g.user.username, g.user.name))
     session.clear()
     return success()

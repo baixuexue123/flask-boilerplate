@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from app import db
 from app.models.user import User, Group, Permission
 from app.decorators import admin_required
-from app.utils.crypt import hashpw, get_random_string
+from app.utils.crypt import hashpw
 
 from . import APIView, success, fail
 
@@ -39,9 +39,8 @@ def user_groups(user_id):
     if user is None:
         return fail(msg='User: %s does not exists' % user_id)
 
-    groups = Group.query.filter(Group.id.in_(group_ids))
-    for g in groups:
-        user.groups.append(g)
+    groups = Group.query.filter(Group.id.in_(group_ids)).all()
+    user.groups = groups
     db.session.commit()
     return success()
 
@@ -56,8 +55,7 @@ def user_permissions(user_id):
         return fail(msg='User: %s does not exists' % user_id)
 
     perms = Permission.query.filter(Permission.id.in_(perm_ids)).all()
-    for p in perms:
-        user.permissions.append(p)
+    user.permissions = perms
     db.session.commit()
     return success()
 
@@ -72,8 +70,7 @@ def group_permissions(group_id):
         return fail(msg='Group: %s does not exists' % group_id)
 
     perms = Permission.query.filter(Permission.id.in_(perm_ids)).all()
-    for p in perms:
-        group.permissions.append(p)
+    group.permissions = perms
     db.session.commit()
     return success()
 
@@ -96,22 +93,24 @@ class UserAPI(AdminAPI):
             search = request.args.get('search', '')
             query = User.query
             if search:
-                query.filter(or_(User.username == search, User.name == search))
-            query.filter(User.is_active == 1)
-            total = query.count()
-            users = query.limit(page_size).offset((page_no - 1) * page_size).all()
-            users = [u.as_dict() for u in users]
-            return success(users=users, total=total, page_no=page_no, page_size=page_size)
+                search = '%' + search + '%'
+                query = query.filter(or_(User.username.like(search), User.name.like(search)))
+            page = query.paginate(page=page_no, per_page=page_size, max_per_page=100)
+            users = [u.as_dict() for u in page.items]
+            return success(users=users, total=page.total, page_no=page_no, page_size=page_size)
 
     def post(self):
         username = request.json['username']
+        password = request.json['password']
         name = request.json['name']
         email = request.json['email']
         is_superuser = request.json['is_superuser']
         is_stuff = request.json['is_stuff']
-        password = hashpw(get_random_string())  # 随机密码
+
+        password = hashpw(password)
         user = User(
-            username=username, password=password, name=name, email=email,
+            username=username, password=password,
+            name=name, email=email,
             is_stuff=is_stuff, is_superuser=is_superuser
         )
         db.session.add(user)
@@ -120,20 +119,44 @@ class UserAPI(AdminAPI):
         except IntegrityError:
             db.session.rollback()
             return fail(msg='User: %s duplicate' % username)
-        else:
-            db.session.commit()
+
+        groups = request.json.get('groups')
+        permissions = request.json.get('permissions')
+        if groups:
+            groups = Group.query.filter(Group.id.in_(groups)).all()
+            user.groups = groups
+        if permissions:
+            permissions = Permission.query.filter(Permission.id.in_(permissions)).all()
+            user.permissions = permissions
+
+        db.session.commit()
         return success(user_id=user.id)
 
     def put(self, user_id):
-        user = User.query.filter(User.id == user_id).first()
+        user = User.query.get(user_id)
         if user is None:
             return fail(msg='User: %s does not exists' % user_id)
 
-        user.username = request.json['username']
-        user.name = request.json['name']
-        user.email = request.json['email']
-        user.is_superuser = request.json['is_superuser']
-        user.is_stuff = request.json['is_stuff']
+        if 'username' in request.json:
+            user.username = request.json['username']
+        if 'name' in request.json:
+            user.name = request.json['name']
+        if 'email' in request.json:
+            user.email = request.json['email']
+        if 'is_superuser' in request.json:
+            user.is_superuser = request.json['is_superuser']
+        if 'is_stuff' in request.json:
+            user.is_stuff = request.json['is_stuff']
+        if 'is_active' in request.json:
+            user.is_active = request.json['is_active']
+
+        groups = request.json.get('groups', [])
+        groups = Group.query.filter(Group.id.in_(groups)).all()
+        user.groups = groups
+        permissions = request.json.get('permissions', [])
+        permissions = Permission.query.filter(Permission.id.in_(permissions)).all()
+        user.permissions = permissions
+
         try:
             db.session.commit()
         except IntegrityError:
@@ -142,7 +165,7 @@ class UserAPI(AdminAPI):
         return success()
 
     def delete(self, user_id):
-        user = User.query.filter(User.id == user_id).first()
+        user = User.query.get(user_id)
         if user is None:
             return fail(msg='User: %s does not exists' % user_id)
         user.is_active = False
@@ -173,8 +196,13 @@ class GroupAPI(AdminAPI):
         except IntegrityError:
             db.session.rollback()
             return fail(msg='Group: %s duplicate' % name)
-        else:
-            db.session.commit()
+
+        permissions = request.json.get('permissions', [])
+        if permissions:
+            permissions = Permission.query.filter(Permission.id.in_(permissions)).all()
+            group.permissions = permissions
+
+        db.session.commit()
         return success(group_id=group.id)
 
     def put(self, group_id):
@@ -184,6 +212,10 @@ class GroupAPI(AdminAPI):
 
         group.name = request.json['name']
         group.memo = request.json['memo']
+        permissions = request.json.get('permissions')
+        permissions = Permission.query.filter(Permission.id.in_(permissions)).all()
+        group.permissions = permissions
+
         try:
             db.session.commit()
         except IntegrityError:
@@ -258,5 +290,5 @@ register_api(GroupAPI, 'groups', '/groups/', pk='group_id')
 
 
 permissions_api = PermissionAPI.as_view('permissions')
-bp.add_url_rule('/permissions', view_func=permissions_api, methods=['GET', 'POST'])
+bp.add_url_rule('/permissions/', view_func=permissions_api, methods=['GET', 'POST'])
 bp.add_url_rule('/permissions/<int:perm_id>', view_func=permissions_api, methods=['PUT', 'DELETE'])
