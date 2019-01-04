@@ -32,12 +32,12 @@ class User(db.Model):
     name = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(50), nullable=True)
 
-    is_superuser = db.Column(db.Boolean, nullable=False, default=False)
-    is_stuff = db.Column(db.Boolean, nullable=False, default=False)
-    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    is_superuser = db.Column(db.Boolean, nullable=False, server_default=db.text('0'))
+    is_stuff = db.Column(db.Boolean, nullable=False, server_default=db.text('0'))
+    is_active = db.Column(db.Boolean, nullable=False, server_default=db.text('1'))
 
-    change_ts = db.Column(db.DateTime, nullable=False)
-    create_ts = db.Column(db.DateTime, nullable=False)
+    change_ts = db.Column(db.DateTime, nullable=False, server_onupdate=db.func.now(), server_default=db.func.now())
+    create_ts = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
 
     groups = db.relationship('Group', secondary=user_groups, back_populates='users')
     permissions = db.relationship('Permission', secondary=user_permissions)
