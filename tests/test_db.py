@@ -1,12 +1,12 @@
 import os
 import sys
 
-from sqlalchemy import or_, text, union
+from sqlalchemy import or_, text, union, and_
 from sqlalchemy.orm import relationship, joinedload
 from sqlalchemy.orm.scoping import scoped_session
 
 basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-sys.path.insert(basedir)
+sys.path.append(basedir)
 
 from app import create_app
 
@@ -70,6 +70,10 @@ with app.app_context():
     # db.session.commit()
     # print(user.as_dict())
 
+    # Group.query.filter(Group.id == 2).update({'name': 'group2'})
+    # User.query.filter(User.id == 2).update({'name': 'admin'})
+    # print(group.as_dict())
+
     # get
     # print(Group.query.get(10))
 
@@ -79,19 +83,18 @@ with app.app_context():
     # query = User.query
     # query.filter(or_(User.username == '111', User.name == '111')).filter(User.is_active == 1).all()
 
+    # filters
+    filters = [
+        User.username == '111',
+        User.name == '222'
+    ]
+    users = User.query.filter(or_(*filters)).all()
+
     # exists
-    print(db.session.query((User.query.filter(User.username == '111').exists())).scalar())
+    # print(db.session.query((User.query.filter(User.username == '111').exists())).scalar())
 
     # join
     # db.session.query(Permission).join(User).filter(User.id == 1).all()
-
-    # update
-    # Group.query.filter(Group.id == 2).update({'name': 'group2'})
-    # User.query.filter(User.id == 2).update({'name': 'admin'})
-
-    # print(group.as_dict())
-
-    # join
     # plugins = Plugin.query.join(Plugin.group).filter(Plugin.name == 'aaa').all()
     # user = User.query.options(joinedload(User.groups)).filter(User.name == "admin").first()
     # print(user.groups)
