@@ -1,7 +1,7 @@
 import os
 import sys
 
-from sqlalchemy import or_, text, union, and_
+from sqlalchemy import or_, text, union, and_, exists, select
 from sqlalchemy.orm import relationship, joinedload
 from sqlalchemy.orm.scoping import scoped_session
 
@@ -14,8 +14,11 @@ app = create_app()
 
 with app.app_context():
     from app import db
-    from app.models.user import Group, User, Permission, user_permissions, user_groups, group_permissions
+    from app.models.user import Group, User, Permission, \
+	user_permissions, user_groups, group_permissions
     from app.utils.crypt import get_random_string, hashpw
+
+    # 自动加载表结构
 
     # metadata = db.MetaData(bind=db.engine)
     # Users = db.Table('user', metadata, autoload=True)
@@ -26,9 +29,9 @@ with app.app_context():
     # db.session.execute(ins)
 
     # db.session.execute(Users.insert(), username='admin',
-    #                    password=hashpw('123'),
-    #                    name='admin'*10,
-    #                    email='xxx@jd.com')
+    #                    password=hashpw('qwe123'),
+    #                    name='管理员'*10,
+    #                    email='baixue12@jd.com')
 
     # class Users(db.Model):
     #     __tablename__ = 'user'
@@ -41,60 +44,69 @@ with app.app_context():
     # print(dir(Users))
 
     # insert
-    # group = Group(name='group4', memo='group')
+
+    # group = Group(name='group4', memo='分组四')
     # db.session.add(group)
     # db.session.flush()
     # print(group.id)
     # db.session.commit()
 
     # user = User(
-    #     username='admin111', password=hashpw('123'),
-    #     name='admin', email='xxx@jd.com'
+    #     username='admin111',
+    #     password=hashpw('qwe123'),
+    #     name='管理员111',
+    #     email='baixue12@jd.com'
     # )
     # db.session.add(user)
     # db.session.flush()
     # print(user.id)
 
-    # user = User.query.get(3)
-    # print(user)
-    #
-    # groups = Group.query.filter(Group.id.in_([2, 3, 4]))
-    # user.groups.extend(groups)
-    #
-    # db.session.commit()
-
     # update
+
     # user = User.query.get(1)
     # print(user.as_dict())
-    # user.name = 'admin'
+    # user.name = '管理员一'
     # db.session.commit()
     # print(user.as_dict())
 
-    # Group.query.filter(Group.id == 2).update({'name': 'group2'})
+    # groups = Group.query.filter(Group.id.in_([2, 3, 4]))
+    # user.groups = groups  # extend append
+    # db.session.commit()
+
     # User.query.filter(User.id == 2).update({'name': 'admin'})
+    # Group.query.filter(Group.id == 2).update({'name': 'group2'})
     # print(group.as_dict())
 
-    # get
-    # print(Group.query.get(10))
+    # query
 
-    # query with_entities
-    # print(User.query.with_entities(User.name).filter(User.is_active == 1).all())
-    #
+    # user = User.query.get(3)
+    # print(user)
+    # print(user.groups.filter(Group.name == '111'))   # relationship(lazy='dynamic')
+    # print(user.groups)
+
+    # with_entities
+    # print(User.query.with_entities(User.name).filter_by(is_active=1).all())
+
+    # filters = [
+    #     User.username == '111',
+    #     User.name == '222'
+    # ]
     # query = User.query
-    # query.filter(or_(User.username == '111', User.name == '111')).filter(User.is_active == 1).all()
-
-    # filters
-    filters = [
-        User.username == '111',
-        User.name == '222'
-    ]
-    users = User.query.filter(or_(*filters)).all()
+    # query = query.filter(or_(*filters))
+    # query.filter(User.is_active == 1).all()
 
     # exists
-    # print(db.session.query((User.query.filter(User.username == '111').exists())).scalar())
+    # print(db.session.query((User.query.filter_by(username='111').exists())).scalar())
 
     # join
-    # db.session.query(Permission).join(User).filter(User.id == 1).all()
-    # plugins = Plugin.query.join(Plugin.group).filter(Plugin.name == 'aaa').all()
-    # user = User.query.options(joinedload(User.groups)).filter(User.name == "admin").first()
+    # user = User.query.options(
+    #     joinedload(User.groups),
+    #     joinedload(User.permissions)).get(3)
+    # print(user)
     # print(user.groups)
+    # print(user.permissions)
+
+    Permission.query.with_entities(Permission.id, Permission.name)
+        .join(group_permissions, Permission.id == group_permissions.c.permission_id)
+        .filter(group_permissions.c.group_id.in_([1, 2, 3])).all()
+
