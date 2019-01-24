@@ -44,7 +44,7 @@ def permission_required(permissions):
                 raise ValueError('permissions: str, list, tuple is required')
 
             if perms:
-                if not g.user.has_perms(permissions):
+                if not g.user.has_perms(perms):
                     abort(403)
             return f(*args, **kwargs)
         return wrapper
