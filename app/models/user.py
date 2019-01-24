@@ -54,11 +54,12 @@ class User(db.Model):
         return [{'id': g.id, 'name': g.name} for g in self.groups]
 
     def get_permissions(self):
-        # 用dict去重
         permissions = {p.id: {'id': p.id, 'name': p.name} for p in self.permissions}
-        for group in self.groups:
-            for p in group.permissions:
-                permissions[p.id] = {'id': p.id, 'name': p.name}
+        perms = Permission.query.with_entities(Permission.id, Permission.name)\
+            .join(group_permissions, Permission.id == group_permissions.c.permission_id)\
+            .filter(group_permissions.c.group_id.in_([g.id for g in self.groups])).all()
+        for p in perms:
+            permissions[p.id] = {'id': p.id, 'name': p.name}
         return list(permissions.values())
 
     @cached_property
