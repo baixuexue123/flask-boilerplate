@@ -64,22 +64,14 @@ class User(db.Model):
 
     @cached_property
     def all_permissions(self):
-        perms = db.session.execute("""
-            SELECT
-                p1.name
-            FROM permission p1
-                JOIN user_permissions up ON p1.id = up.permission_id
-            WHERE up.user_id=:user_id
-
-            UNION
-
-            SELECT
-                p2.name
-            FROM permission p2
-                JOIN group_permissions gp ON gp.permission_id = p2.id
-                JOIN user_groups ug ON gp.group_id = ug.group_id
-            WHERE ug.user_id=:user_id
-        """, {'user_id': self.id})
+        q1 = Permission.query.with_entities(Permission.name)\
+            .join(user_permissions)\
+            .filter(user_permissions.c.user_id == self.id)
+        q2 = Permission.query.with_entities(Permission.name)\
+            .join(group_permissions, group_permissions.c.permission_id == Permission.id)\
+            .join(user_groups, group_permissions.c.group_id == user_groups.c.group_id)\
+            .filter(user_groups.c.user_id == self.id)
+        perms = q1.union(q2).all()
         return {p.name for p in perms}
 
     def has_perms(self, perms):
