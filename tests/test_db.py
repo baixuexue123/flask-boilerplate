@@ -29,9 +29,9 @@ with app.app_context():
     # db.session.execute(ins)
 
     # db.session.execute(Users.insert(), username='admin',
-    #                    password=hashpw('qwe123'),
-    #                    name='管理员'*10,
-    #                    email='baixue12@jd.com')
+    #                    password=hashpw('123'),
+    #                    name='管理员',
+    #                    email='pysaoke@gmail.com')
 
     # class Users(db.Model):
     #     __tablename__ = 'user'
@@ -52,10 +52,10 @@ with app.app_context():
     # db.session.commit()
 
     # user = User(
-    #     username='admin111',
-    #     password=hashpw('qwe123'),
-    #     name='管理员111',
-    #     email='baixue12@jd.com'
+    #     username='admin',
+    #     password=hashpw('123'),
+    #     name='管理员',
+    #     email='pysaoke@gmail.com'
     # )
     # db.session.add(user)
     # db.session.flush()
@@ -65,7 +65,7 @@ with app.app_context():
 
     # user = User.query.get(1)
     # print(user.as_dict())
-    # user.name = '管理员一'
+    # user.name = 'admin'
     # db.session.commit()
     # print(user.as_dict())
 
