@@ -15,7 +15,7 @@ app = create_app()
 with app.app_context():
     from app import db
     from app.models.user import Group, User, Permission, \
-	user_permissions, user_groups, group_permissions
+        user_permissions, user_groups, group_permissions
     from app.utils.crypt import get_random_string, hashpw
 
     # 自动加载表结构
@@ -106,7 +106,7 @@ with app.app_context():
     # print(user.groups)
     # print(user.permissions)
 
-    Permission.query.with_entities(Permission.id, Permission.name)
-        .join(group_permissions, Permission.id == group_permissions.c.permission_id)
+    Permission.query.with_entities(Permission.id, Permission.name)\
+        .join(group_permissions, Permission.id == group_permissions.c.permission_id)\
         .filter(group_permissions.c.group_id.in_([1, 2, 3])).all()
 

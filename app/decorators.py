@@ -1,7 +1,5 @@
 from functools import wraps
-from flask import g, abort, request
-
-from app.cache import cache
+from flask import g, abort
 
 
 def login_required(f):

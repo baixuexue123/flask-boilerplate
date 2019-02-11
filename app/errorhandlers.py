@@ -27,4 +27,3 @@ def page_not_found(error):
 @bp.errorhandler(exceptions.InternalServerError)
 def internal_server_error(error):
     return jsonify(code=100500, msg='Internal Server Error')
-

@@ -48,4 +48,3 @@ def cached(timeout=5*60, key_prefix='view:%s', use_qs=False):
             return rv
         return wrapper
     return _decorator
-
