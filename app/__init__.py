@@ -22,12 +22,10 @@ def create_app():
     db.init_app(app)
 
     with app.app_context():
+        from app import errorhandlers
         from app.api import auth, admin
         app.register_blueprint(auth.bp)
         app.register_blueprint(admin.bp)
-
-        from app import errorhandlers
-        app.register_blueprint(errorhandlers.bp)
 
         @app.route('/')
         def index():

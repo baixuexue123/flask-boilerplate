@@ -1,29 +1,28 @@
+from flask import jsonify
+from flask import current_app as app
 from werkzeug import exceptions
-from flask import Blueprint, jsonify
-
-bp = Blueprint('errors', __name__)
 
 
-@bp.errorhandler(exceptions.BadRequest)
+@app.errorhandler(exceptions.BadRequest)
 def bad_request(error):
-    return jsonify(code=100400, msg='Bad Request')
+    return jsonify(code=100400, msg='Bad Request', error=str(error))
 
 
-@bp.errorhandler(exceptions.Unauthorized)
+@app.errorhandler(exceptions.Unauthorized)
 def unauthorized(error):
-    return jsonify(code=100401, msg='Unauthorized')
+    return jsonify(code=100401, msg='Unauthorized', error=str(error))
 
 
-@bp.errorhandler(exceptions.Forbidden)
+@app.errorhandler(exceptions.Forbidden)
 def forbidden(error):
-    return jsonify(code=100403, msg='Forbidden')
+    return jsonify(code=100403, msg='Forbidden', error=str(error))
 
 
-@bp.errorhandler(exceptions.NotFound)
+@app.errorhandler(exceptions.NotFound)
 def page_not_found(error):
-    return jsonify(code=100404, msg='Page Not Found')
+    return jsonify(code=100404, msg='Page Not Found', error=str(error))
 
 
-@bp.errorhandler(exceptions.InternalServerError)
+@app.errorhandler(exceptions.InternalServerError)
 def internal_server_error(error):
-    return jsonify(code=100500, msg='Internal Server Error')
+    return jsonify(code=100500, msg='Internal Server Error', error=str(error))
