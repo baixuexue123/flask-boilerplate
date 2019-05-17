@@ -20,7 +20,7 @@ class Config:
     SECRET_KEY = 'SECRET_KEY_ENV_VAR_NOT_SET'
 
     SESSION_COOKIE_HTTPONLY = False
-    PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=2)
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
@@ -28,8 +28,8 @@ class Config:
     MAX_CONTENT_LENGTH = 1024 * 1024 * 50
 
     LOG_DIR = os.path.join(basedir, 'logs')
-    LOG_MAXBYTES = 1024 * 1024 * 100  # 100M -- 单个log文件的大小
-    LOG_BACKUPCOUNT = 8  # log文件备份数量
+    LOG_MAXBYTES = 1024 * 1024 * 100
+    LOG_BACKUPCOUNT = 8
 
     @classmethod
     def init_app(cls, app):
@@ -41,12 +41,12 @@ class Config:
         from logging.handlers import RotatingFileHandler
 
         verbose = logging.Formatter(
-            fmt='[%(asctime)s - %(name)s - %(module)s - %(lineno)d] %(levelname)-8s\n%(message)s',
+            fmt='[%(asctime)s] %(name)s %(module)s %(lineno)d %(levelname)-8s: %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
 
         simple = logging.Formatter(
-            fmt='[%(asctime)s - %(name)s] %(levelname)-8s : %(message)s',
+            fmt='[%(asctime)s] %(name)s %(levelname)-8s: %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
 
@@ -69,10 +69,9 @@ class Config:
 
 
 class DevelopmentConfig(Config):
-    DEBUG = False
+
     REDIS_URL = 'localhost:6379'
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://demo:demo123@localhost:3306/demo?charset=utf8'
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
     SQLALCHEMY_ECHO = True
 
     SESSION_TYPE = 'redis'

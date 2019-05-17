@@ -29,6 +29,7 @@ def create_app():
 
         @app.route('/')
         def index():
-            return 'Hello'
+            app.logger.info('-----------------********-----------------')
+            return 'Hello flask'
 
     return app

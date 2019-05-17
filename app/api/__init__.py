@@ -20,3 +20,10 @@ class APIView(MethodView):
     @property
     def json_params(self):
         return request.get_json(force=True)
+
+
+def register_api(bp, view, endpoint, url, pk='pk', pk_type='int'):
+    func = view.as_view(endpoint)
+    bp.add_url_rule(url, defaults={pk: None}, view_func=func, methods=['GET'])
+    bp.add_url_rule(url, view_func=func, methods=['POST'])
+    bp.add_url_rule('%s<%s:%s>' % (url, pk_type, pk), view_func=func, methods=['GET', 'PUT', 'DELETE'])
