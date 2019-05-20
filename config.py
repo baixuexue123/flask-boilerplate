@@ -33,7 +33,6 @@ class Config:
 
     @classmethod
     def init_app(cls, app):
-        Config.init_app(app)
 
         os.makedirs(cls.LOG_DIR, exist_ok=True)
 
@@ -66,10 +65,11 @@ class Config:
 
         app.logger.addHandler(file_handler)
         app.logger.addHandler(error_handler)
+        app.logger.setLevel(logging.DEBUG if cls.DEBUG else logging.INFO)
 
 
 class DevelopmentConfig(Config):
-
+    DEBUG = False
     REDIS_URL = 'localhost:6379'
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://demo:demo123@localhost:3306/demo?charset=utf8'
     SQLALCHEMY_ECHO = True
