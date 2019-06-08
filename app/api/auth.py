@@ -1,3 +1,5 @@
+import lazy_object_proxy
+
 from flask import session, request, g
 from flask import Blueprint
 from flask import current_app as app
@@ -11,13 +13,18 @@ from . import success, fail
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
 
+@app.before_request
+def detect_user_language():
+    g.language = request.cookies.get('lang')
+
+
 @bp.before_app_request
 def load_logged_in_user():
     user_id = session.get('user_id')
     if user_id is None:
         g.user = None
     else:
-        g.user = User.query.get(user_id)
+        g.user = lazy_object_proxy.Proxy(lambda: User.query.get(user_id))
 
 
 @bp.route('/login', methods=['POST'])
