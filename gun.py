@@ -7,6 +7,8 @@ reload = False
 user = "admin"
 group = "admin"
 
+# chdir = ""
+
 raw_env = "FLASK_ENV=testing"
 
 bind = "127.0.0.1:8000"
@@ -19,7 +21,7 @@ threads = multiprocessing.cpu_count() * 2
 
 max_requests = 2000
 
-backlog = 2048
+backlog = 1024
 
 proc_name = 'gunicorn'
 
@@ -32,5 +34,3 @@ accesslog = './logs/gunicorn.access.log'
 access_log_format = '%(h)s %(l)s %(t)s "%(r)s" %(s)s %(D)s'
 
 errorlog = './logs/gunicorn.error.log'
-
-# gunicorn -c gun.py  wsgi:app
