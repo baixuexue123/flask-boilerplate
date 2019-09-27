@@ -19,11 +19,13 @@ workers = multiprocessing.cpu_count()
 
 threads = multiprocessing.cpu_count() * 2
 
+max_connections = 1000
+
 max_requests = 2000
 
 backlog = 1024
 
-proc_name = 'gunicorn'
+proc_name = 'xxx'
 
 loglevel = 'info'
 pidfile = './logs/gunicorn.pid'
