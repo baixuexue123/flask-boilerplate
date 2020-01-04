@@ -2,6 +2,7 @@ bcrypt==3.1.7
 lazy_object_proxy==1.4.3
 click==7.0
 werkzeug==0.16.0
+celery==4.4.0
 flask==1.1.1
 flask-session==0.3.1
 flask-sqlalchemy==2.4.1

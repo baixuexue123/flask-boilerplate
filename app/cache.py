@@ -48,3 +48,31 @@ def cached(timeout=5*60, key_prefix='view:%s', use_qs=False):
             return rv
         return wrapper
     return _decorator
+
+
+def _make_key(args, kwds, kwd_mark=(object(),), fasttypes={int, str, frozenset, type(None)}):
+    key = args
+    if kwds:
+        key += kwd_mark
+        for item in kwds.items():
+            key += item
+    if len(key) == 1 and type(key[0]) in fasttypes:
+        return key[0]
+    return str(hash(key))
+
+
+def func_cached(timeout=None, key_prefix='func:'):
+    def _decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            cache_key = key_prefix + f.__name__
+            if args or kwargs:
+                cache_key = cache_key + ':' + _make_key(args, kwargs)
+            rv = CACHE.get(cache_key)
+            if rv is not None:
+                return rv
+            rv = f(*args, **kwargs)
+            CACHE.set(cache_key, rv, timeout=timeout)
+            return rv
+        return wrapper
+    return _decorator
