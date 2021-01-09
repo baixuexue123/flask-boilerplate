@@ -8,15 +8,15 @@ from sqlalchemy.orm.scoping import scoped_session
 basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(basedir)
 
-from app import create_app
+from services.app import create_app
 
 app = create_app()
 
 with app.app_context():
-    from app import db
-    from app.models.user import Group, User, Permission, \
+    from services import db
+    from services.models.user import Group, User, Permission, \
         user_permissions, user_groups, group_permissions
-    from app.utils.crypt import get_random_string, hashpw
+    from services.utils.crypt import get_random_string, hashpw
 
     # 自动加载表结构
 

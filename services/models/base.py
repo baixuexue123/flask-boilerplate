@@ -2,6 +2,7 @@ import enum
 
 from flask_sqlalchemy import Model
 from sqlalchemy_utils.types import Choice
+from sqlalchemy.sql.expression import ClauseElement
 
 
 class BaseModel(Model):
@@ -21,6 +22,18 @@ class BaseModel(Model):
         return res
 
     def save(self):
-        from app import db
+        from services.models import db
         db.session.add(self)
         db.session.commit()
+
+
+def get_or_create(session, model, defaults=None, **kwargs):
+    instance = session.query(model).filter_by(**kwargs).first()
+    if instance:
+        return instance, False
+    else:
+        params = dict((k, v) for k, v in kwargs.items() if not isinstance(v, ClauseElement))
+        params.update(defaults or {})
+        instance = model(**params)
+        session.add(instance)
+        return instance, True

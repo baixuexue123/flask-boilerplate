@@ -3,10 +3,10 @@ from flask import Blueprint, request
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
-from app import db
-from app.models.user import User, Group, Permission
-from app.decorators import admin_required
-from app.utils.crypt import hashpw
+from services.models import db
+from services.models.auth import User, Group, Permission
+from services.api.decorators import admin_required
+from services.utils.crypt import hashpw
 
 from . import APIView, success, fail, register_api
 

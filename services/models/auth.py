@@ -1,6 +1,6 @@
 from werkzeug.utils import cached_property
 
-from app import db
+from services.models import db
 
 user_groups = db.Table(
     'user_groups', db.metadata,

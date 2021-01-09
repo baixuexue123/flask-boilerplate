@@ -14,7 +14,7 @@ except ImportError:
         return str(uuid4())
 
 
-from app.utils.text import force_bytes
+from services.utils.text import force_bytes
 
 
 def hashpw(password):

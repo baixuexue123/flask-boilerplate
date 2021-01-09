@@ -4,9 +4,9 @@ from flask import session, request, g
 from flask import Blueprint
 from flask import current_app as app
 
-from app.models.user import User
-from app.utils.crypt import checkpw
-from app.decorators import login_required
+from services.models.auth import User
+from services.utils.crypt import checkpw
+from services.api.decorators import login_required
 
 from . import success, fail
 

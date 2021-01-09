@@ -4,17 +4,14 @@ import logging
 import flask
 from flask import Flask
 from flask_session import Session
-from flask_sqlalchemy import SQLAlchemy
 
 from celery import Celery
 from kombu import Queue
 
-from config import config
+from settings import config
 
-from .models.base import BaseModel
-from .escape import JSONEncoder
-
-db = SQLAlchemy(model_class=BaseModel)
+from services.models import db
+from services.utils.escape import JSONEncoder
 
 flask_logger = logging.getLogger('flask.app')
 flask_logger.handlers.clear()
@@ -92,8 +89,9 @@ def create_app():
     celery.init_app(app)
 
     with app.app_context():
-        from app import errorhandlers
-        from app.api import auth, admin
+        from services.api import errorhandlers
+        from services.api import auth, admin
+        import services.hook
         app.register_blueprint(auth.bp)
         app.register_blueprint(admin.bp)
 
