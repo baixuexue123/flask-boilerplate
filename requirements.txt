@@ -1,6 +1,6 @@
 bcrypt==3.2.0
 lazy_object_proxy==1.6.0
-celery==5.0.5
+celery==5.2.2
 flask==1.1.2
 flask-session==0.3.2
 flask-sqlalchemy==2.5.1
